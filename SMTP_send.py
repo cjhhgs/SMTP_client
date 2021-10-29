@@ -9,7 +9,7 @@ def SMTP_send(mail):
     mailServer = "smtp.qq.com"
     fromAddress = mail.From
     toAddress = mail.To
-    password = "wdteskannxwncbcj"
+    password = mail.Pass
     serverPort = 587
     clientSocket = socket(AF_INET, SOCK_STREAM)     #建立套接字
     sslclientSocket = ssl.wrap_socket(clientSocket, cert_reqs=ssl.CERT_NONE,ssl_version=ssl.PROTOCOL_SSLv23)    #ssl认证的套接字
@@ -93,20 +93,23 @@ def SMTP_send(mail):
 
     
     recv8 = sslclientSocket.recv(1024).decode()
-    print(recv8)
+    print('8:'+recv8)
 
     return 0
 
 if __name__ == '__main__':
-    mail = myMail.myMail
-    mail.From = '462072107@qq.com'
-    mail.To = ['462072107@qq.com']
-    mail.Pass = 'wdteskannxwncbcj'
+    # mail = myMail.myMail
+    # mail.From = '462072107@qq.com'
+    # mail.To = ['462072107@qq.com']
+    # mail.Pass = 'wdteskannxwncbcj'
 
-    message = myMail.mailMessage
-    message.Subject = 'test'
-    message.MainText = 'hello!'
+    # message = myMail.mailMessage
+    # message.Subject = 'test'
+    # message.MainText = 'hello!'
 
-    mail.Message = message
+    # mail.Message = message
     
-    SMTP_send(mail)
+    #SMTP_send(mail)
+
+    main2 = myMail.myMail('462072107@qq.com','wdteskannxwncbcj',['462072107@qq.com'],'test2','hello')
+    SMTP_send(main2)
