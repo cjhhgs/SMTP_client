@@ -7,5 +7,5 @@ class myMail():
     From = ''
     Pass = ''
     To = ['']
-    Message = mailMessage()
+    Message = mailMessage
     
