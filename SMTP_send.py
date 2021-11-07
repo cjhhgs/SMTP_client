@@ -9,6 +9,7 @@ def SMTP_send(mail):
     
     mailServer = "smtp.qq.com"
     fromAddress = mail.From
+    user = '462072107'
     toAddress = mail.To
     password = mail.Pass
     serverPort = 587
@@ -76,7 +77,7 @@ def SMTP_send(mail):
 
 
     #头部信息
-    From = b'From:%s\r\n'%fromAddress.encode()  #发送方
+    From = b'From:%s\r\n'%user.encode()  #发送方
     sslclientSocket.send(From)
 
     for addr in toAddress:
@@ -97,6 +98,12 @@ def SMTP_send(mail):
     print('8:'+recv8)
 
     return 0
+
+def login(user_name,password):
+
+    res = 1
+    return res
+
 
 if __name__ == '__main__':
     # mail = myMail.myMail
@@ -122,7 +129,7 @@ if __name__ == '__main__':
     sadhahsjdghasgd
     asgdhasdghg
     ''')
-    #SMTP_send(main2)
+    SMTP_send(main2)
     print(main2)
     sss={'From':main2.From,'To':main2.To,'Pass':main2.Pass,'Subject':main2.Message.Subject,'Maintext':main2.Message.MainText}
     print(sss)
