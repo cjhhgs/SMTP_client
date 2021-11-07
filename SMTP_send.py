@@ -1,4 +1,5 @@
 from socket import *
+from tkinter.constants import S
 from email.base64mime import body_encode
 import ssl
 import myMail
@@ -111,5 +112,17 @@ if __name__ == '__main__':
     
     #SMTP_send(mail)
 
-    main2 = myMail.myMail('462072107@qq.com','wdteskannxwncbcj',['462072107@qq.com'],'test2','hello')
-    SMTP_send(main2)
+    main2 = myMail.myMail('462072107@qq.com',
+    'wdteskannxwncbcj',
+    ['462072107@qq.com'],
+    'test2',
+    '''
+    hello,sjsjjssjsjhhdh
+    sdhsjadjjsgdjgsajhgh
+    sadhahsjdghasgd
+    asgdhasdghg
+    ''')
+    #SMTP_send(main2)
+    print(main2)
+    sss={'From':main2.From,'To':main2.To,'Pass':main2.Pass,'Subject':main2.Message.Subject,'Maintext':main2.Message.MainText}
+    print(sss)
