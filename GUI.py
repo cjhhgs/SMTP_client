@@ -1,7 +1,9 @@
 
 import tkinter
+import tkinter.messagebox
 from tkinter.constants import BOTH, X,Y, BOTTOM, LEFT, TOP, TRUE
 import SMTP_send
+import os
 
 class mail_GUI():
     window = tkinter.Tk()
@@ -11,6 +13,7 @@ class mail_GUI():
     var_recive = tkinter.StringVar()
     var_subject = tkinter.StringVar()
     var_text = tkinter.StringVar()
+    var_save_name = tkinter.StringVar()
 
 
     def __init__(self):
@@ -88,7 +91,7 @@ class mail_GUI():
 
         btn1 = tkinter.Button(self.frame4, text='新建',font=('Arial', 12), width=20, height=2)
         btn1.place(x=0,y=0)
-        btn2 = tkinter.Button(self.frame4, text='保存',font=('Arial', 12), width=20, height=2)
+        btn2 = tkinter.Button(self.frame4, text='保存',font=('Arial', 12), width=20, height=2,command=self.handler_save)
         btn2.place(x=0,y=60)
         btn3 = tkinter.Button(self.frame4, text='草稿箱',font=('Arial', 12), width=20, height=2)
         btn3.place(x=0,y=120)
@@ -112,9 +115,9 @@ class mail_GUI():
 
         lable4 = tkinter.Label(self.frame5,text='正文：',font=('Arial', 12))
         lable4.place(x=1,y=130,width=100,height=30)
-        entry_text = tkinter.Text(self.frame5,  font=('Arial', 12),width=46, height=20)
-        entry_text.place(x=100,y=130)
-        entry_text.insert(1.0, self.var_text.get())
+        self.entry_text = tkinter.Text(self.frame5,  font=('Arial', 12),width=46, height=20)
+        self.entry_text.place(x=100,y=130)
+        self.entry_text.insert(1.0, self.var_text.get())
 
         btn_send = tkinter.Button(self.frame5,text='发送',font=('Arial', 12) ,width=10, height=1)
         btn_send.place(x=100,y=500)
@@ -123,6 +126,53 @@ class mail_GUI():
 
         
         
+    def handler_save(self):
+        print("save")
+        window_save = tkinter.Toplevel(self.window)
+        window_save.geometry('300x100')
+        window_save.title('save to box')
+
+        
+        self.var_save_name.set('待发送邮件')
+        tkinter.Label(window_save,text='保存邮件名：').place(x=10,y=20)
+        entry_save_name = tkinter.Entry(window_save,textvariable=self.var_save_name)
+        entry_save_name.place(x=130,y=20)
+
+        btn_comfirm_save = tkinter.Button(window_save,text='保存',command=self.save)
+        btn_comfirm_save.place(x=150,y=60)
+
+    def save(self):
+        
+        new_name = self.var_save_name.get()+'.txt'
+
+        #检查是否文件重名
+        filepath=os.getcwd()+'\save_box'
+        files = os.listdir(filepath)
+        print(files)
+
+        for file in files:
+            if(file==new_name):
+                tkinter.messagebox.showerror('错误','文件名已存在')
+                return 1
+
+        Sendaddr = self.var_usr_name.get()
+        Pass = self.var_usr_pwd.get()
+        Username = self.var_user.get()
+        Receive = self.var_recive.get()
+        Subject=self.var_subject.get()
+        #Text=self.entry_text.get()
+
+        save_file = {'Username':Username,'Receive':Receive,'Subject':Subject,'Text':0}
+
+        full_path = filepath + '\\'+new_name
+        new_file = open(full_path, 'w')
+        
+        new_file.write(str(save_file))
+        new_file.close()
+
+        tkinter.messagebox.showinfo('提示','保存成功')
+
+
 
 
     def new_mail():
