@@ -1,7 +1,8 @@
 
 import tkinter
 import tkinter.messagebox
-from tkinter.constants import BOTH, X,Y, BOTTOM, LEFT, TOP, TRUE
+from tkinter import ttk
+from tkinter.constants import BOTH, S, X,Y, BOTTOM, LEFT, TOP, TRUE
 import SMTP_send
 import os
 
@@ -14,7 +15,8 @@ class mail_GUI():
     var_subject = tkinter.StringVar()
     var_text = tkinter.StringVar()
     var_save_name = tkinter.StringVar()
-
+    user=''
+    password=''
 
     def __init__(self):
         self.window.title("e-mail")
@@ -100,6 +102,7 @@ class mail_GUI():
         
         lable1 = tkinter.Label(self.frame5,text='发件人：',font=('Arial', 12))
         lable1.place(x=1,y=10,width=100,height=30)
+        self.var_user.set(self.user)
         entry_user = tkinter.Entry(self.frame5, textvariable=self.var_user, font=('Arial', 12))
         entry_user.place(x=100,y=10,width=450, height=30)
 
@@ -107,6 +110,9 @@ class mail_GUI():
         lable2.place(x=1,y=50,width=100,height=30)
         entry_recive = tkinter.Entry(self.frame5, textvariable=self.var_recive, font=('Arial', 12))
         entry_recive.place(x=100,y=50,width=450, height=30)
+
+        btn_addrs = tkinter.Button(self.frame5,text='+',font=('Arial', 12) ,width=2, height=1,command=self.handler_addrs)
+        btn_addrs.place(x=560,y=50)
 
         lable3 = tkinter.Label(self.frame5,text=' 主题：',font=('Arial', 12))
         lable3.place(x=1,y=90,width=100,height=30)
@@ -160,9 +166,9 @@ class mail_GUI():
         Username = self.var_user.get()
         Receive = self.var_recive.get()
         Subject=self.var_subject.get()
-        #Text=self.entry_text.get()
+        Text=self.entry_text.get(1.0,"end")
 
-        save_file = {'Username':Username,'Receive':Receive,'Subject':Subject,'Text':0}
+        save_file = {'Username':Username,'Receive':Receive,'Subject':Subject,'Text':Text}
 
         full_path = filepath + '\\'+new_name
         new_file = open(full_path, 'w')
@@ -172,8 +178,42 @@ class mail_GUI():
 
         tkinter.messagebox.showinfo('提示','保存成功')
 
+    #通讯录处理函数
+    def handler_addrs(self):
+        self.recieve_list = ''  #获取文件中的通讯录信息
+        
+        print()
+        window_addrs = tkinter.Toplevel(self.window)
+        window_addrs.geometry('300x100')
+        window_addrs.title('select receive addresss')
 
+        tkinter.Label(window_addrs,text='收件人：').place(x=10,y=20)
+        self.comvalue=tkinter.StringVar()#窗体自带的文本，新建一个值
+        self.comvalue.set("hh")
+        self.comboxlist=ttk.Combobox(window_addrs,textvariable=self.comvalue)
+        self.comboxlist["values"]=("1","2","3","4")
+        self.comboxlist.current(0) #选择第一个
+        self.comboxlist.bind("<<ComboboxSelected>>",self.select) #绑定事件,(下拉列表框被选中时，绑定go()函数)
+        self.comboxlist.place(x=100,y=20)
 
+    def select(self,event):
+        s = self.comboxlist.get()   #新选的
+        print(s)
+        x = self.var_recive.get()   #已有的
+        recive_list = x.split(';')
+
+        for i in recive_list:
+            if(i==s):
+                s=''
+        if(s!='' and x!=''):
+            y = x+';'+s
+        elif(s!='' and x==''):
+            y=s
+        else:
+            y=x
+
+        print(y)
+        self.var_recive.set(y)
 
     def new_mail():
         print(1)
