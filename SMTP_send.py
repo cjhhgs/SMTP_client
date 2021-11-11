@@ -5,23 +5,40 @@ import ssl
 import myMail
 import base64
 
+
+##错误码表
+# 1：连接失败
+# 2：用户名错误
+# 3：密码错误
+# 4: 收件人信息错误
+# 5：邮件信息格式错误
 def SMTP_send(mail):
     
     mailServer = "smtp.qq.com"
     fromAddress = mail.From
-    user = '462072107'
-    toAddress = mail.To
     password = mail.Pass
+    user = mail.User
+    toAddress = mail.To
+    
     serverPort = 587
-    clientSocket = socket(AF_INET, SOCK_STREAM)     #建立套接字
-    sslclientSocket = ssl.wrap_socket(clientSocket, cert_reqs=ssl.CERT_NONE,ssl_version=ssl.PROTOCOL_SSLv23)    #ssl认证的套接字
+    try:
+        clientSocket = socket(AF_INET, SOCK_STREAM)     #建立套接字
+        sslclientSocket = ssl.wrap_socket(clientSocket, cert_reqs=ssl.CERT_NONE,ssl_version=ssl.PROTOCOL_SSLv23)    #ssl认证的套接字
+    except:
+        return 1
+    else:
+        print("套接字连接成功")
 
     #连接服务器
-    sslclientSocket.connect((mailServer, serverPort))   
+    try:
+        sslclientSocket.connect((mailServer, serverPort))   
+    except:
+        return 1
     recv = sslclientSocket.recv(1024).decode()
     print(recv)
     if '220' != recv[:3]:
         print('220 reply not received from server.')
+        return 1
     
     #发出问候
     heloCommand = 'HELO qq.com\r\n'
@@ -30,6 +47,7 @@ def SMTP_send(mail):
     print('1:'+recv1)
     if '250' != recv1[:3]:
         print('250 reply not received from server.')
+        return 1
 
 
     #发出登录认证
@@ -37,6 +55,9 @@ def SMTP_send(mail):
     sslclientSocket.send(loginCommand.encode())
     recv2 = sslclientSocket.recv(1024).decode()
     print('2:'+recv2)
+    if '334'!=recv2[:3]:
+        print('334 reply not received from server.')
+        return 1
 
     
     #发送用户名
@@ -45,12 +66,20 @@ def SMTP_send(mail):
     sslclientSocket.send(userCommand)
     recv3 = sslclientSocket.recv(1024).decode()
     print('3:'+recv3)
+    if '334' != recv3[:3]:
+        print('334 reply not received from server.')
+        return 2
+
+
     #发送授权码
     passwordbase64 =  base64.b64encode(f'{password}'.encode())
     passwordCommand = b'%s\r\n' % passwordbase64
     sslclientSocket.send(passwordCommand)
     recv4 = sslclientSocket.recv(1024).decode()
     print('4:'+recv4)
+    if '235' != recv4[:3]:
+        print('235 reply not received from server.')
+        return 3
 
     
     #发送者的邮箱地址
@@ -58,6 +87,9 @@ def SMTP_send(mail):
     sslclientSocket.send(mailfromCommand)
     recv5 = sslclientSocket.recv(1024).decode()
     print('5:'+recv5)
+    if '250' != recv5[:3]:
+        print('250 reply not received from server.')
+        return 2
 
 
     #收件人邮箱地址
@@ -67,13 +99,19 @@ def SMTP_send(mail):
         sslclientSocket.send(mailtoCommand)
         recv6 = sslclientSocket.recv(1024).decode()
         print('6:'+recv6)
+        if '250' != recv6[:3]:
+            print('250 reply not received from server.')
+            return 4
 
 
-    #请求发送邮件信息
+    #请求发送邮件
     dataCommand = b'DATA\r\n'
     sslclientSocket.send(dataCommand)
     recv7 = sslclientSocket.recv(1024).decode()
     print('7:'+recv7)
+    if '354' != recv7[:3]:
+        print('354 reply not received from server.')
+        return 1
 
 
     #头部信息
@@ -96,13 +134,94 @@ def SMTP_send(mail):
     
     recv8 = sslclientSocket.recv(1024).decode()
     print('8:'+recv8)
+    if '250' != recv8[:3]:
+        print('250 reply not received from server.')
+        return 5
+
+    quitcommand = 'QUIT\r\n'
+    sslclientSocket.send(quitcommand.encode())
+    recv9 = sslclientSocket.recv(1024).decode()
+    print('9:'+recv9)
+    if('221' != recv9[:3]):
+        print('221 reply not received from server.')
+        return 1
 
     return 0
 
-def login(user_name,password):
 
-    res = 1
-    return res
+# 错误码表
+# 1： 连接错误
+# 2： 用户名错误
+# 3： 密码错误
+def login(user,password):
+    mailServer = "smtp.qq.com"
+    serverPort = 587
+    try:
+        clientSocket = socket(AF_INET, SOCK_STREAM)     #建立套接字
+        sslclientSocket = ssl.wrap_socket(clientSocket, cert_reqs=ssl.CERT_NONE,ssl_version=ssl.PROTOCOL_SSLv23)    #ssl认证的套接字
+    except:
+        return 1
+
+    #连接服务器
+    try:
+        sslclientSocket.connect((mailServer, serverPort)) 
+    except:
+        return 1  
+    recv = sslclientSocket.recv(1024).decode()
+    print(recv)
+    if '220' != recv[:3]:
+        print('220 reply not received from server.')
+        return 1
+    
+    #发出问候
+    heloCommand = 'HELO qq.com\r\n'
+    sslclientSocket.send(heloCommand.encode())
+    recv1 = sslclientSocket.recv(1024).decode()
+    print('1:'+recv1)
+    if '250' != recv1[:3]:
+        print('250 reply not received from server.')
+        return 1
+
+
+    #发出登录认证
+    loginCommand = 'AUTH login\r\n'
+    sslclientSocket.send(loginCommand.encode())
+    recv2 = sslclientSocket.recv(1024).decode()
+    print('2:'+recv2)
+    if ('334' != recv2[:3]):
+        print('334 reply not received from server.')
+        return 1
+
+    
+    #发送用户名
+    fromAddressbass64=base64.b64encode(f'{user}'.encode())
+    userCommand = b'%s\r\n' % fromAddressbass64
+    sslclientSocket.send(userCommand)
+    recv3 = sslclientSocket.recv(1024).decode()
+    print('3:'+recv3)
+    if ('334' != recv3[:3]):
+        print('334 reply not received from server.')
+        return 2
+
+    #发送授权码
+    passwordbase64 =  base64.b64encode(f'{password}'.encode())
+    passwordCommand = b'%s\r\n' % passwordbase64
+    sslclientSocket.send(passwordCommand)
+    recv4 = sslclientSocket.recv(1024).decode()
+    print('4:'+recv4)
+    if ('235' != recv4[:3]):
+        print('235 reply not received from server.')
+        return 3
+
+    quitcommand = 'QUIT\r\n'
+    sslclientSocket.send(quitcommand.encode())
+    recv5 = sslclientSocket.recv(1024).decode()
+    print('5:'+recv5)
+    if('221' != recv5[:3]):
+        print('221 reply not received from server.')
+        return 1
+
+    return 0
 
 
 if __name__ == '__main__':
@@ -119,17 +238,17 @@ if __name__ == '__main__':
     
     #SMTP_send(mail)
 
-    main2 = myMail.myMail('462072107@qq.com',
-    'wdteskannxwncbcj',
-    ['462072107@qq.com'],
-    'test2',
-    '''
-    hello,sjsjjssjsjhhdh
-    sdhsjadjjsgdjgsajhgh
-    sadhahsjdghasgd
-    asgdhasdghg
-    ''')
-    SMTP_send(main2)
-    print(main2)
-    sss={'From':main2.From,'To':main2.To,'Pass':main2.Pass,'Subject':main2.Message.Subject,'Maintext':main2.Message.MainText}
-    print(sss)
+    # main2 = myMail.myMail('462072107@qq.com',
+    # 'wdteskannxwncbcj',
+    # '462072107',
+    # ['462072107@qq.com'],
+    # 'test2',
+    # '''
+    # hello,sjsjjssjsjhhdh
+    # sdhsjadjjsgdjgsajhgh
+    # sadhahsjdghasgd
+    # asgdhasdghg
+    # ''')
+    # SMTP_send(main2)
+
+    login('462072107@qq.com','wdteskannxwncbcj')

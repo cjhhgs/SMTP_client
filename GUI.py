@@ -4,6 +4,7 @@ import tkinter.messagebox
 from tkinter import ttk
 from tkinter.constants import BOTH, S, X,Y, BOTTOM, LEFT, TOP, TRUE
 import SMTP_send
+import myMail
 import os
 import ast
 
@@ -25,11 +26,11 @@ class mail_GUI():
         self.frame = tkinter.Frame(self.window,bg='white')
         self.frame.pack(expand=TRUE,fill=BOTH)
         
-        l = tkinter.Label(self.frame, text='你好！this is my e-mail', bg='red',font=('Arial', 12), width=30, height=2)
-        l.pack()
+        l = tkinter.Label(self.frame, text='Hello！this is my e-mail',bg='white',font=('Arial', 12), width=30, height=2)
+        l.place(x=250,y=170)
 
-        btn1=tkinter.Button(self.frame,text='进入',bg='red',font=('Arial', 12), width=10, height=1,command=self.sign_in)
-        btn1.pack()
+        btn1=tkinter.Button(self.frame,text='进入',font=('Arial', 12),bg='white', width=10, height=1,command=self.sign_in)
+        btn1.place(x=350,y=250)
 
         self.window.mainloop()
 
@@ -49,11 +50,12 @@ class mail_GUI():
 
         # 第6步，用户登录输入框entry
         # 用户名
-        self.var_usr_name.set('example@qq.com')
+        self.var_usr_name.set('462072107@qq.com')
         entry_usr_name = tkinter.Entry(self.frame2, textvariable=self.var_usr_name, font=('Arial', 14))
         entry_usr_name.place(x=310,y=175)
 
         # 用户密码
+        self.var_usr_pwd.set('wdteskannxwncbcj')
         entry_usr_pwd = tkinter.Entry(self.frame2, textvariable=self.var_usr_pwd, font=('Arial', 14))
         entry_usr_pwd.place(x=310,y=215)
 
@@ -67,12 +69,17 @@ class mail_GUI():
         self.password = self.var_usr_pwd.get()
 
         print("开始验证")
-        if_right = SMTP_send.login(self.user,self.password)
-        if(if_right==1):
+        code = SMTP_send.login(self.user,self.password)
+        if(code==0):
             print("right")
             self.main_view()
-        else:
+        elif(code==1):
             print("wroung")
+            tkinter.messagebox.showerror('错误','连接失败，请重试')
+        elif(code==2):
+            tkinter.messagebox.showerror('错误','用户名不存在')
+        elif(code==3):
+            tkinter.messagebox.showerror('错误','授权码错误')
 
     def main_view(self):
         print("log in")
@@ -98,6 +105,8 @@ class mail_GUI():
         btn2.place(x=0,y=60)
         btn3 = tkinter.Button(self.frame4, text='草稿箱',font=('Arial', 12), width=20, height=2,command=self.handler_mailbox)
         btn3.place(x=0,y=120)
+        btn4 = tkinter.Button(self.frame4,text='发送',font=('Arial', 12) ,width=20, height=2,command=self.handler_send_mail)
+        btn4.place(x=0,y=180)
 
         
         
@@ -282,10 +291,35 @@ class mail_GUI():
         self.var_subject.set(dict["Subject"])
         self.var_text.set(dict["Text"])
         self.entry_text.delete(1.0, "end")
-        self.entry_text.insert(1.0, self.var_text.get())
+        self.entry_text.insert(1.0, dict["Text"])
         
         print(1)
 
+    def handler_send_mail(self):
+        useraddr = self.var_usr_name.get()
+        password = self.var_usr_pwd.get()
+
+        username = self.var_user.get()
+        receive = self.var_recive.get().split(';')
+
+        subject = self.var_subject.get()
+        text = self.entry_text.get(1.0,"end")
+        print(useraddr,password,username,receive,subject,text)
+        main2 = myMail.myMail(useraddr,password,username,receive,subject,text)
+        
+        code = SMTP_send.SMTP_send(main2)
+        if code == 0:
+            tkinter.messagebox.showinfo('提示','发送成功')
+            print("success")
+        elif code == 1:
+            tkinter.messagebox.showerror('错误',"连接错误，请重试")
+        elif code == 4:
+            tkinter.messagebox.showerror('错误',"收件人信息错误")
+        elif code == 5:
+            tkinter.messagebox.showerror('错误',"邮件格式错误")
+
+
+        
 
     def new_mail():
         print(1)
