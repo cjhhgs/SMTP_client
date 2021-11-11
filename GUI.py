@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter.constants import BOTH, S, X,Y, BOTTOM, LEFT, TOP, TRUE
 import SMTP_send
 import os
+import ast
 
 class mail_GUI():
     window = tkinter.Tk()
@@ -95,7 +96,7 @@ class mail_GUI():
         btn1.place(x=0,y=0)
         btn2 = tkinter.Button(self.frame4, text='保存',font=('Arial', 12), width=20, height=2,command=self.handler_save)
         btn2.place(x=0,y=60)
-        btn3 = tkinter.Button(self.frame4, text='草稿箱',font=('Arial', 12), width=20, height=2)
+        btn3 = tkinter.Button(self.frame4, text='草稿箱',font=('Arial', 12), width=20, height=2,command=self.handler_mailbox)
         btn3.place(x=0,y=120)
 
         
@@ -131,7 +132,7 @@ class mail_GUI():
         btn_save.place(x=200,y=500)
 
         
-        
+    # 保存到草稿箱的处理函数
     def handler_save(self):
         print("save")
         window_save = tkinter.Toplevel(self.window)
@@ -180,23 +181,31 @@ class mail_GUI():
 
     #通讯录处理函数
     def handler_addrs(self):
-        self.recieve_list = ''  #获取文件中的通讯录信息
+        self.recieve_list = []  #获取文件中的通讯录信息
+        f = open('addrs.txt',"r")
+        s = f.read()
+        f.close()
+        self.recieve_list = s.split(';')
         
-        print()
         window_addrs = tkinter.Toplevel(self.window)
         window_addrs.geometry('300x100')
         window_addrs.title('select receive addresss')
 
+        tkinter.Button(window_addrs,text='新建',command=self.handler_new_addrs).place(x=60,y=60)
+        self.var_new_receive=tkinter.Variable()
+        tkinter.Entry(window_addrs,textvariable=self.var_new_receive, font=('Arial', 12)).place(x=100,y=60,width=180, height=20)
+        
+
         tkinter.Label(window_addrs,text='收件人：').place(x=10,y=20)
         self.comvalue=tkinter.StringVar()#窗体自带的文本，新建一个值
-        self.comvalue.set("hh")
+        self.comvalue.set("选择收件人")
         self.comboxlist=ttk.Combobox(window_addrs,textvariable=self.comvalue)
-        self.comboxlist["values"]=("1","2","3","4")
-        self.comboxlist.current(0) #选择第一个
-        self.comboxlist.bind("<<ComboboxSelected>>",self.select) #绑定事件,(下拉列表框被选中时，绑定go()函数)
+        self.comboxlist["values"]=tuple(self.recieve_list)
+        #self.comboxlist.current(0) #选择第一个
+        self.comboxlist.bind("<<ComboboxSelected>>",self.select_addr) #绑定事件,(下拉列表框被选中时，绑定go()函数)
         self.comboxlist.place(x=100,y=20)
 
-    def select(self,event):
+    def select_addr(self,event):
         s = self.comboxlist.get()   #新选的
         print(s)
         x = self.var_recive.get()   #已有的
@@ -214,6 +223,69 @@ class mail_GUI():
 
         print(y)
         self.var_recive.set(y)
+
+    def handler_new_addrs(self):
+        ff = open('addrs.txt','r')
+        ss = ff.read()
+        ff.close()
+        print(ss)
+        s = self.var_new_receive.get()
+        self.var_new_receive.set('')
+        if(s!=''):
+            f = open('addrs.txt','a')
+            if(ss==''):
+                f.write(s)
+            else:
+                f.write(';'+s)
+            f.close()
+
+            f = open('addrs.txt',"r")
+            s = f.read()
+            f.close()
+            self.recieve_list = s.split(';')
+            self.comboxlist["values"]=tuple(self.recieve_list)
+    
+
+    def handler_mailbox(self):
+        print()
+        window_mailbox = tkinter.Toplevel(self.window)
+        window_mailbox.geometry('300x100')
+        window_mailbox.title('select from mailbox')
+
+        
+        filepath=os.getcwd()+'\save_box'
+        files = os.listdir(filepath)
+        self.mail_list=files   #提取邮件列表
+
+        tkinter.Label(window_mailbox,text='选择邮件：').place(x=10,y=20)
+        self.var_select_mail=tkinter.StringVar()#窗体自带的文本，新建一个值
+        self.var_select_mail.set("")
+        self.comboxlist=ttk.Combobox(window_mailbox,textvariable=self.var_select_mail)
+        self.comboxlist["values"]=tuple(self.mail_list)
+        #self.comboxlist.current(0) #选择第一个
+        #self.comboxlist.bind("<<ComboboxSelected>>") #绑定事件,(下拉列表框被选中时，绑定go()函数)
+        self.comboxlist.place(x=100,y=20)
+
+        tkinter.Button(window_mailbox,text='确定',command=self.handler_select_mail).place(x=120,y=60)
+        
+       
+    def handler_select_mail(self):
+        file = self.var_select_mail.get()
+        filepath=os.getcwd()+'\save_box\\'+file
+        f = open(filepath,'r')
+        context = f.read()
+        print(context)
+        dict = ast.literal_eval(context)
+
+        self.var_user.set( dict["Username"])
+        self.var_recive.set(dict["Receive"])
+        self.var_subject.set(dict["Subject"])
+        self.var_text.set(dict["Text"])
+        self.entry_text.delete(1.0, "end")
+        self.entry_text.insert(1.0, self.var_text.get())
+        
+        print(1)
+
 
     def new_mail():
         print(1)
