@@ -1,5 +1,6 @@
 
 import tkinter
+from tkinter import font
 import tkinter.messagebox
 from tkinter import ttk
 from tkinter.constants import BOTH, S, X,Y, BOTTOM, LEFT, TOP, TRUE
@@ -7,6 +8,7 @@ import SMTP_send
 import myMail
 import os
 import ast
+import datetime
 
 class mail_GUI():
     window = tkinter.Tk()
@@ -99,7 +101,7 @@ class mail_GUI():
         self.frame5.place(x=200,y=0)
         self.frame5.lift()
 
-        btn1 = tkinter.Button(self.frame4, text='新建',font=('Arial', 12), width=20, height=2)
+        btn1 = tkinter.Button(self.frame4, text='新建',font=('Arial', 12), width=20, height=2,command=self.handler_new)
         btn1.place(x=0,y=0)
         btn2 = tkinter.Button(self.frame4, text='保存',font=('Arial', 12), width=20, height=2,command=self.handler_save)
         btn2.place(x=0,y=60)
@@ -107,6 +109,8 @@ class mail_GUI():
         btn3.place(x=0,y=120)
         btn4 = tkinter.Button(self.frame4,text='发送',font=('Arial', 12) ,width=20, height=2,command=self.handler_send_mail)
         btn4.place(x=0,y=180)
+        btn5 = tkinter.Button(self.frame4,text='已发送',font=('Arial', 12) ,width=20, height=2,command=self.handler_sended)
+        btn5.place(x=0,y=240)
 
         
         
@@ -135,12 +139,14 @@ class mail_GUI():
         self.entry_text.place(x=100,y=130)
         self.entry_text.insert(1.0, self.var_text.get())
 
-        btn_send = tkinter.Button(self.frame5,text='发送',font=('Arial', 12) ,width=10, height=1)
-        btn_send.place(x=100,y=500)
-        btn_save = tkinter.Button(self.frame5,text='保存',font=('Arial', 12) ,width=10, height=1)
-        btn_save.place(x=200,y=500)
+       
 
-        
+    def handler_new(self):
+        self.var_recive.set('')
+        self.var_subject.set('')
+        self.entry_text.delete(1.0,"end")
+
+        print(1)
     # 保存到草稿箱的处理函数
     def handler_save(self):
         print("save")
@@ -171,8 +177,7 @@ class mail_GUI():
                 tkinter.messagebox.showerror('错误','文件名已存在')
                 return 1
 
-        Sendaddr = self.var_usr_name.get()
-        Pass = self.var_usr_pwd.get()
+        
         Username = self.var_user.get()
         Receive = self.var_recive.get()
         Subject=self.var_subject.get()
@@ -256,7 +261,7 @@ class mail_GUI():
     
 
     def handler_mailbox(self):
-        print()
+
         window_mailbox = tkinter.Toplevel(self.window)
         window_mailbox.geometry('300x100')
         window_mailbox.title('select from mailbox')
@@ -310,6 +315,7 @@ class mail_GUI():
         code = SMTP_send.SMTP_send(main2)
         if code == 0:
             tkinter.messagebox.showinfo('提示','发送成功')
+            self.save_to_sended()
             print("success")
         elif code == 1:
             tkinter.messagebox.showerror('错误',"连接错误，请重试")
@@ -319,7 +325,67 @@ class mail_GUI():
             tkinter.messagebox.showerror('错误',"邮件格式错误")
 
 
+    def save_to_sended(self):
+        curr_time = datetime.datetime.now()# 2019-07-06 14:55:56.873893 <class 'datetime.datetime'>
+        time_str = datetime.datetime.strftime(curr_time,'%Y%m%d%H%M%S')# 2019-07-06 15:50:12
         
+        Username = self.var_user.get()
+        Receive = self.var_recive.get()
+        Subject=self.var_subject.get()
+        Text=self.entry_text.get(1.0,"end")
+
+        save_file = {'Username':Username,'Receive':Receive,'Subject':Subject,'Text':Text}
+
+        #检查是否文件重名
+        filepath=os.getcwd()+'\sended_box'
+        full_path = filepath + '\\'+time_str+'--\''+Subject+'\''
+        print(full_path)
+        new_file = open(full_path, 'w')
+        print(2)
+        
+        new_file.write(str(save_file))
+        new_file.close()
+        print(1)
+
+
+    def handler_sended(self):
+        window_sended = tkinter.Toplevel(self.window)
+        window_sended.geometry('400x300')
+        window_sended.title('sended mail')
+
+        tkinter.Label(window_sended,text='已发送邮件',font=('Arial', 12)).place(x=10,y=10)
+
+        var = tkinter.StringVar()
+        
+        #创建Listbox
+        self.lb = tkinter.Listbox(window_sended, listvariable=var,font=('Arial', 12),width=40)  #将var2的值赋给Listbox
+        self.lb.place(x=10,y=50)
+
+        #打开文件
+        filepath=os.getcwd()+'\sended_box'
+        files = os.listdir(filepath)
+        self.sended_list=files   #提取邮件列表
+        var.set(tuple(self.sended_list))
+
+        tkinter.Button(window_sended,text='打开',command=self.handler_open_sended).place(x=10,y=250)
+        
+        print(1)
+
+    def handler_open_sended(self):
+        file = self.lb.get(self.lb.curselection())
+        filepath=os.getcwd()+'\sended_box\\'+file
+        f = open(filepath,'r')
+        context = f.read()
+        print(context)
+        dict = ast.literal_eval(context)
+
+        self.var_user.set( dict["Username"])
+        self.var_recive.set(dict["Receive"])
+        self.var_subject.set(dict["Subject"])
+        self.var_text.set(dict["Text"])
+        self.entry_text.delete(1.0, "end")
+        self.entry_text.insert(1.0, dict["Text"])
+        print(1)
 
     def new_mail():
         print(1)
@@ -329,3 +395,5 @@ class mail_GUI():
 if __name__ == '__main__':
     win=mail_GUI()
    
+
+# pyinstaller -F test.py -w
